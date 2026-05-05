@@ -1,0 +1,133 @@
+{
+  "type": "Settings",
+  "audio": {
+    "input": {
+      "encoding": "mulaw",
+      "sample_rate": 8000
+    },
+    "output": {
+      "encoding": "mulaw",
+      "sample_rate": 8000,
+      "container": "none"
+    }
+  },
+  "agent": {
+    "language": "en",
+    "listen": {
+      "provider": {
+        "type": "deepgram",
+        "model": "nova-3",
+        "keyterms": [
+          "hello",
+          "goodbye",
+          "refund",
+          "billing",
+          "order",
+          "tracking",
+          "supervisor",
+          "manager"
+        ]
+      }
+    },
+    "think": {
+      "provider": {
+        "type": "google_gemini_openai_compat",
+        "model": "gemini-2.5-flash",
+        "temperature": 0.7
+      },
+      "prompt": "You are CXVoice Agent, an enterprise customer support voice assistant.\n\nGoal: Resolve customer issues quickly with empathy, clarity, and accurate tool usage.\n\nRules:\n- Keep each spoken response concise (about 1 to 3 short sentences).\n- Confirm intent before major actions.\n- If the user is frustrated, acknowledge and reassure.\n- Use one primary action each turn: GREET, CLARIFY, RESOLVE, TOOL_CALL, ESCALATE, or CLOSE.\n\nSupport workflows:\n- Account: verify identity, troubleshoot, confirm fix.\n- Billing: explain charge, offer resolution, process refund when justified.\n- Orders: check status, provide ETA and tracking, resolve lost or delayed cases.\n- Technical: gather context, give step-by-step fixes, escalate if unresolved.\n- Complaints: escalate immediately on supervisor or manager requests, legal threats, or repeated unresolved attempts.\n\nTool policy:\n- Call tools when account, order, or billing facts are needed.\n- Never invent customer IDs, order IDs, refund confirmations, or escalation ticket IDs.\n- Ask for missing IDs clearly before calling tools.\n\nResponse style:\n- Natural spoken English.\n- Professional, calm, and confident.\n- End resolved turns with a brief check-in question.",
+      "functions": [
+        {
+          "name": "get_customer_data",
+          "description": "Fetch customer account details by customer ID for verification, tier, contact, and support context.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "customer_id": {
+                "type": "string",
+                "description": "Customer identifier, for example CUST-1001."
+              }
+            },
+            "required": [
+              "customer_id"
+            ]
+          }
+        },
+        {
+          "name": "check_order",
+          "description": "Fetch order status, carrier, tracking, ETA, and refund eligibility by order ID.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "order_id": {
+                "type": "string",
+                "description": "Order identifier, for example ORD-9001."
+              }
+            },
+            "required": [
+              "order_id"
+            ]
+          }
+        },
+        {
+          "name": "refund",
+          "description": "Create a refund request for a known order when amount and reason are provided.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "number",
+                "description": "Refund amount in USD, must be greater than zero."
+              },
+              "order_id": {
+                "type": "string",
+                "description": "Order identifier associated with the refund."
+              },
+              "reason": {
+                "type": "string",
+                "description": "Reason for refund such as late_delivery, damaged_item, or duplicate_charge."
+              }
+            },
+            "required": [
+              "amount",
+              "order_id",
+              "reason"
+            ]
+          }
+        },
+        {
+          "name": "escalate",
+          "description": "Create an escalation ticket for complex, urgent, or manager-requested cases.",
+          "parameters": {
+            "type": "object",
+            "properties": {
+              "reason": {
+                "type": "string",
+                "description": "Clear reason for escalation."
+              },
+              "priority": {
+                "type": "string",
+                "description": "Escalation priority: low, normal, high, or urgent."
+              },
+              "customer_id": {
+                "type": "string",
+                "description": "Optional customer identifier to attach to the escalation."
+              }
+            },
+            "required": [
+              "reason",
+              "priority"
+            ]
+          }
+        }
+      ]
+    },
+    "speak": {
+      "provider": {
+        "type": "deepgram",
+        "model": "aura-2-thalia-en"
+      }
+    },
+    "greeting": "Hello, you are speaking with Emma at customer support. I can help with billing, orders, account issues, and escalations. How can I help today?"
+  }
+}
